@@ -3,11 +3,11 @@ const http = require('http');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
-const { signRequest } = require('@worldcoin/idkit-core/signing');
+const { getWorldIdResult } = require('./integrations/world_id');
 
 const PORT = parseInt(process.env.PORT || '80', 10);
 const SSL_PORT = parseInt(process.env.SSL_PORT || '443', 10);
-const SIGNING_KEY = process.env.SIGNING_KEY;
+const WORLD_SIGNING_KEY = process.env.WORLD_SIGNING_KEY;
 const CONTENT_DIR = process.env.CONTENT_DIR || '.content';
 const SSL_KEY_FILE = process.env.SSL_KEY_FILE || path.join('.cert', 'key.pem');
 const SSL_CERT_FILE = process.env.SSL_CERT_FILE || path.join('.cert', 'cert.pem');
@@ -18,7 +18,7 @@ const SERVE_STATIC = (() => {
     return String(v).toLowerCase() !== 'false';
 })();
 
-if (!SIGNING_KEY) {
+if (!WORLD_SIGNING_KEY) {
     console.error('Missing SIGNING_KEY in environment. See .env.example');
     process.exit(1);
 }
@@ -194,15 +194,13 @@ async function requestHandler(req, res) {
 
     applyCors(res);
     try {
-        if (req.method === 'POST' && req.url === '/id-kit-connect') {
+        if (req.method === 'POST' && req.url === '/validate-word-id') {
             const body = await parseJsonBody(req);
             const action = body && body.action;
             if (!action) {
                 return sendJson(res, 400, { error: 'Missing required field: action' });
             }
-            const { sig, nonce, createdAt, expiresAt } = signRequest({
-                signingKeyHex: SIGNING_KEY, action
-            });
+            const { sig, nonce, createdAt, expiresAt } = getWorldIdResult(WORLD_SIGNING_KEY, action);
             return sendJson(res, 200, {sig, nonce, created_at: createdAt,
                 expires_at: expiresAt
             });
