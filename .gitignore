@@ -1,5 +1,5 @@
 .cert/
-.local_server/
+.server/
 .venv/
 .env
 

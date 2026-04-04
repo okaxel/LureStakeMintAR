@@ -10,7 +10,7 @@ const PORT = parseInt(process.env.PORT || '80', 10);
 const SSL_PORT = parseInt(process.env.SSL_PORT || '443', 10);
 const WORLD_SIGNING_KEY = process.env.WORLD_SIGNING_KEY;
 const WALLET_CONNECT_KEY = process.env.WALLET_CONNECT_KEY;
-const CONTENT_DIR = process.env.CONTENT_DIR || '.content';
+const CONTENT_DIR = process.env.CONTENT_DIR || '.frontend';
 const SSL_KEY_FILE = process.env.SSL_KEY_FILE || path.join('.cert', 'key.pem');
 const SSL_CERT_FILE = process.env.SSL_CERT_FILE || path.join('.cert', 'cert.pem');
 
