@@ -56,6 +56,7 @@
 
         <script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@bd6bf821eda2522f84a1dc2b6d78674dfcd06e4a/dist/aframe-master.min.js"></script>
         <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.6.1/dist/aframe-extras.min.js"></script>
+        <script src="https://unpkg.com/aframe-event-set-component@5.x.x/dist/aframe-event-set-component.min.js"></script>
 
         <script src="components.js"></script>
     </head>
@@ -78,8 +79,10 @@
             <a-entity meta-touch-controls="hand: right; model: true;" controller-listener="hand: right;" six-dimension-tracker="tag: right">
                 <a-entity gltf-model="#quest-touch-plus-right" scale="1 1 1"></a-entity>
             </a-entity>
-            <a-box position="1.5 1.78 -1.5" rotation="0 0 0" color="#e0e000"
-                   material="color: #ADFF2F; shader: standard; metalness: 0; roughness: 1; emissive: #ADFF2F; emissiveIntensity: 1">
+            <a-entity laser-controls="hand: left" raycaster="lineColor: #ff00a0; lineOpacity: 0.9; showLine: true" id="rayCasterLeft"></a-entity>
+            <a-entity laser-controls="hand: right" raycaster="lineColor: #a000ff; lineOpacity: 0.9; showLine: true" id="rayCasterRight"></a-entity>
+            <a-box position="1.5 1.78 -1.5" rotation="0 0 0"
+                   material="color: #ADFF2F; shader: standard; metalness: 0; roughness: 1; emissive: #ADFF2F; emissiveIntensity: 1" hover-color-change>
                 <a-animation attribute="material.emissiveIntensity" from="0.6"
                              to="2" dur="900" direction="alternate"
                              repeat="indefinite"></a-animation>

@@ -1,11 +1,10 @@
 const EVENT_OPTIONS = {passive: true, capture: true, useCapture: true};
 
 const AppState = {
-    alien: null,
+    aliens: [],
     initialized: false,
     isARSupported: false,
     isVRSupported: false,
-    modeBtn: null,
     scene: null,
 }
 
@@ -55,6 +54,31 @@ class UserState {
   static head = new HeadState();
   static left = new ControllerState();
   static right = new ControllerState();
+  static __events = {};
+
+  static emit(event, data) {
+
+    if (UserState.__events.hasOwnProperty(event))
+      UserState.__events[event].forEach(callback => callback(data));
+
+  }
+
+  static registerEvent(event, callback) {
+
+    if (! UserState.__events.hasOwnProperty(event))
+      UserState.__events[event] = [];
+    if (! UserState.__events[event].includes(callback))
+      UserState.__events[event].push(callback);
+
+  }
+
+  static unregisterEvent(event, callback) {
+
+    if (UserState.__events.hasOwnProperty(event) && UserState.__events[event].includes(callback))
+      UserState.__events[event].splice(UserState.__events[event].indexOf(callback), 1);
+
+  }
+
 
 }
 
@@ -69,6 +93,19 @@ class Alien {
     }
 
 }
+
+function createRandomAlien() {
+
+  const x = -1 + (Math.random() * 4 - 2);
+  const y = Math.random() * 2 - 1;
+  const z = -1 * (Math.random() * 6 - 3);
+  const alien = newAlien(`${x} ${y} ${z}`, 0.1, '#ffFF00');
+  return alien;
+
+}
+
+
+
 
 async function handleModeBtnClick () {
 
@@ -104,28 +141,12 @@ async function initPage() {
 
     window.removeEventListener('DOMContentLoaded', initPage);
     AppState.scene = document.querySelector('a-scene');
-    AppState.modeBtn = document.getElementById('modeBtn');
-    if (AppState.modeBtn == null) {
-        console.error('modeBtn not found');
-        return;
-    }
-    AppState.modeBtn.textContent = 'Initializing...';
     if (typeof navigator.xr !== 'undefined') {
         AppState.isARSupported = await navigator.xr.isSessionSupported('immersive-ar').catch(()=>false);
         AppState.isVRSupported = await navigator.xr.isSessionSupported('immersive-vr').catch(()=>false);
     }
-    AppState.modeBtn.textContent = AppState.isARSupported ? 'Enter AR!' : (AppState.isVRSupported ? 'Enter VR (AR not supported)' : 'No immersive XR supported');
-    // AppState.modeBtn.addEventListener('click', handleModeBtnClick, EVENT_OPTIONS);
-    /*
-    if (AppState.isARSupported || AppState.isVRSupported) {
-        AppState.modeBtn.addEventListener('click', handleModeBtnClick, EVENT_OPTIONS);
-    } else {
-         AppState.modeBtn.disabled = true;
-    }
-    */
     AppState.initialized = true;
-    setInterval(() => {LOG_CONTAINER.push(new Date().toISOString());}, 1000);
-
+    // setInterval(() => {LOG_CONTAINER.push(new Date().toISOString());}, 1000);
 }
 
 async function moveElement() {
@@ -142,22 +163,20 @@ async function moveElement() {
  *
  * @param {Element} el - The A-Frame entity (e.g., <a-entity>, <a-sphere>).
  * @param {string|Array|Object} targetPos - Target position as "x y z" string, [x,y,z], or {x,y,z}.
- * @param {number} timeFactor - Multiplier for base duration. (1 = baseDuration)
  * @param {Object} [opts] - Optional settings.
- * @param {number} [opts.baseDuration=800] - Base duration in ms before applying timeFactor.
+ * @param {number} [opts.duration=800] - Animation duration in milliseconds.
  * @param {function} [opts.easing] - Easing function f(t) where t in [0,1]. Default easeInOutQuad.
  * @returns {Promise} Resolves when animation completes.
  */
 
-function moveAFrameElementTo(el, targetPos, timeFactor = 1, opts = {}) {
+function moveAFrameElementTo(el, targetPos, opts = {}) {
   if (!el || !(el instanceof Element)) {
     return Promise.reject(new Error('First argument must be a DOM element'));
   }
 
   // Respect reduced motion preference
   const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const baseDuration = typeof opts.baseDuration === 'number' ? opts.baseDuration : 800;
-  const duration = Math.max(0, baseDuration * (typeof timeFactor === 'number' ? timeFactor : 1));
+  const duration = typeof opts.duration === 'number' ? opts.duration : 800;
 
   // Default easing
   const easeInOutQuad = (t) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
@@ -261,7 +280,9 @@ function newAlien(position, radius, color) {
     alien.setAttribute('radius', radius);
     alien.setAttribute('color', color);
     alien.setAttribute('shadow', 'cast: true; receive: true');
+    alien.setAttribute('hover-color-change', '');
     AppState.scene.appendChild(alien);
+    AppState.aliens.push(alien);
     return alien;
 
 }

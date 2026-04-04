@@ -1,5 +1,3 @@
-const LOG_CONTAINER = [];
-
 AFRAME.registerComponent('vr-log', {
 	
 	init: function()
@@ -9,13 +7,10 @@ AFRAME.registerComponent('vr-log', {
 
 	tick: function()
 	{
-		this.text = "";
-        let content = LOG_CONTAINER.shift();
-        while (content) {
-            this.text += content + "\n";
-            content = LOG_CONTAINER.shift();
-        }
-        if (this.text.length == 0) return;
+        this.text = `LEFT : x ${UserState.left.position.x.toFixed(2)} y ${UserState.left.position.y.toFixed(2)} z ${UserState.left.position.z.toFixed(2)}\n`;
+        this.text += `RIGHT : x ${UserState.right.position.x.toFixed(2)} y ${UserState.right.position.y.toFixed(2)} z ${UserState.right.position.z.toFixed(2)}\n`;
+        this.text += `HEAD : x ${UserState.head.position.x.toFixed(2)} y ${UserState.head.position.y.toFixed(2)} z ${UserState.head.position.z.toFixed(2)}\n`;
+        this.text += `Count of aliens : ${AppState.aliens.length}\n`;
         this.el.setAttribute( "text", "value", this.text );
 	},
 	
@@ -32,9 +27,20 @@ AFRAME.registerComponent('controller-listener', {
             case 'left':
                 this.el.addEventListener('triggerdown', function(e) {
                     UserState.left.triggerPressed = true;
+                    const node = document.getElementById('rayCasterLeft');
+                    createRandomAlien();
+                    if (node === null) return;
+                    node.setAttribute('raycaster', 'lineColor', '#ffffff');
+                    node.setAttribute('raycaster', 'lineOpacity', 0.9);
+                    node.setAttribute('raycaster', 'showLine', true);
                 });
                 this.el.addEventListener('triggerup', function(e) {
                     UserState.left.triggerPressed = false;
+                    const node = document.getElementById('rayCasterLeft');
+                    if (node === null) return;
+                    node.setAttribute('raycaster', 'lineColor', '#ff00a0');
+                    node.setAttribute('raycaster', 'lineOpacity', 0.9);
+                    node.setAttribute('raycaster', 'showLine', true);
                 });
                 this.el.addEventListener('triggertouchstart', function(e) {
                     UserState.left.triggerTouching = true;
@@ -134,8 +140,18 @@ AFRAME.registerComponent('controller-listener', {
             case 'right':
                 this.el.addEventListener('triggerdown', function(e) {
                     UserState.right.triggerPressed = true;
+                    const node = document.getElementById('rayCasterRight');
+                    if (node === null) return;
+                    node.setAttribute('raycaster', 'lineColor', '#ffffff');
+                    node.setAttribute('raycaster', 'lineOpacity', 0.9);
+                    node.setAttribute('raycaster', 'showLine', true);
                 });
                 this.el.addEventListener('triggerup', function(e) {
+                    const node = document.getElementById('rayCasterRight');
+                    if (node === null) return;
+                    node.setAttribute('raycaster', 'lineColor', '#a000ff');
+                    node.setAttribute('raycaster', 'lineOpacity', 0.9);
+                    node.setAttribute('raycaster', 'showLine', true);
                     UserState.right.triggerPressed = false;
                 });
                 this.el.addEventListener('triggertouchstart', function(e) {
@@ -237,6 +253,23 @@ AFRAME.registerComponent('controller-listener', {
     }
 });
 
+
+AFRAME.registerComponent('hover-color-change', {
+    schema: {
+        type: 'string', default: '#ffffff'
+    },
+    init: function () {
+        const originalColor = this.el.getAttribute('material').color;
+        this.el.addEventListener('mouseenter', function () {
+            this.el.setAttribute('color', this.data);
+        }.bind(this));
+        this.el.addEventListener('mouseleave', function () {
+            this.el.setAttribute('color', originalColor);
+        }.bind(this));
+    }
+
+})
+
 AFRAME.registerComponent('six-dimension-tracker', {
     schema: {
         tag: {type: 'string', default: 'left'},
@@ -247,40 +280,30 @@ AFRAME.registerComponent('six-dimension-tracker', {
                 this.tickFunction = () => {
                     UserState.head.position = this.el.object3D.position;
                     UserState.head.rotation = this.el.object3D.rotation;
-                    const position = JSON.stringify(this.el.object3D.position);
-                    const rotation = JSON.stringify(this.el.object3D.rotation);
-                    LOG_CONTAINER.push(`${this.data.tag} rotation: ${rotation}`);
                 }
                 break;
             case 'left':
                 this.tickFunction = () => {
                     UserState.left.position = this.el.object3D.position;
                     UserState.left.rotation = this.el.object3D.rotation;
-                    const position = JSON.stringify(this.el.object3D.position);
-                    const rotation = JSON.stringify(this.el.object3D.rotation);
-                    LOG_CONTAINER.push(`${this.data.tag} rotation: ${rotation}`);
                 }
                 break;
             case 'right':
                 this.tickFunction = () => {
                     UserState.right.position = this.el.object3D.position;
                     UserState.right.rotation = this.el.object3D.rotation;
-                    const position = JSON.stringify(this.el.object3D.position);
-                    const rotation = JSON.stringify(this.el.object3D.rotation);
-                    LOG_CONTAINER.push(`${this.data.tag} rotation: ${rotation}`);
                 }
                 break;
             default:
                 this.tickFunction = () => {
-                    LOG_CONTAINER.push(`no tick function for ${this.data.tag}`);
+                    console.warn('Unhandled six-dimension-tracker tag: ' + this.data.tag);
                 }
                 break;
         }
-
     },
     tick: function () {
         this.tickFunction();
-0    }
+    }
 });
 
 /*
@@ -291,9 +314,5 @@ abuttonchanged 	A button changed.
 bbuttonchanged 	B button changed.
 xbuttonchanged 	X button changed.
 ybuttonchanged 	Y button changed.
-surfacedown 	Surface button pressed.
-surfaceup 	Surface button released.
-surfacetouchstart 	Surface button touched.
-surfacetouchend 	Surface button no longer touched.
 surfacechanged 	Surface button changed.
 */
