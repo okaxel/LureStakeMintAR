@@ -1,0 +1,35 @@
+{
+  "name": "lurestakemint-ar",
+  "version": "1.0.0",
+  "description": "The most delightfully ridiculous AR hunt around.",
+  "keywords": [
+    "AR",
+    "NFT",
+    "Multiverse",
+    "Gaming",
+    "ETHGlobal",
+    "ETHGlobal",
+    "Cannes",
+    "2026"
+  ],
+  "homepage": "https://github.com/okaxel/LureStakeMintAR#readme",
+  "bugs": {
+    "url": "https://github.com/okaxel/LureStakeMintAR/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/okaxel/LureStakeMintAR.git"
+  },
+  "license": "MIT",
+  "author": "Dr. Axel Ország-Krisz",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@worldcoin/idkit-core": "^4.1.0",
+    "dotenv": "^17.4.0"
+  }
+}
