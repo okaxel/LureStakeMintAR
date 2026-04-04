@@ -4,10 +4,12 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const { getWorldIdResult } = require('./integrations/world_id');
+const { paymentGet, paymentFetch, paymentConfirm } = require('./integrations/wallet_connect');
 
 const PORT = parseInt(process.env.PORT || '80', 10);
 const SSL_PORT = parseInt(process.env.SSL_PORT || '443', 10);
 const WORLD_SIGNING_KEY = process.env.WORLD_SIGNING_KEY;
+const WALLET_CONNECT_KEY = process.env.WALLET_CONNECT_KEY;
 const CONTENT_DIR = process.env.CONTENT_DIR || '.content';
 const SSL_KEY_FILE = process.env.SSL_KEY_FILE || path.join('.cert', 'key.pem');
 const SSL_CERT_FILE = process.env.SSL_CERT_FILE || path.join('.cert', 'cert.pem');
@@ -194,7 +196,7 @@ async function requestHandler(req, res) {
 
     applyCors(res);
     try {
-        if (req.method === 'POST' && req.url === '/validate-word-id') {
+        if (req.method === 'POST' && req.url === '/id_validate') {
             const body = await parseJsonBody(req);
             const action = body && body.action;
             if (!action) {
@@ -205,10 +207,48 @@ async function requestHandler(req, res) {
                 expires_at: expiresAt
             });
         }
-        if (req.method === 'POST' && req.url === '/pay') {
+        if (req.method === 'POST' && req.url === '/payment_get') {
             const body = await parseJsonBody(req);
+            const id = body && body.id;
+            if (!id) {
+                return sendJson(res, 400, { error: 'Missing required field: id' });
+            }
             try {
-                const result = await processPayment(body);
+                const result = await paymentGet(id, WALLET_CONNECT_KEY);
+                return sendJson(res, 200, { result });
+            } catch (err) {
+                return sendJson(res, 400, { error: err.message || 'Payment processing failed' });
+            }
+        }
+        if (req.method === 'POST' && req.url === '/payment_fetch') {
+            const data = await parseJsonBody(req);
+            const id = data && data.id;
+            if (!id) {
+                return sendJson(res, 400, { error: 'Missing required field: id' });
+            }
+            const body = data && data.body;
+            if (!body) {
+                return sendJson(res, 400, { error: 'Missing required field: body' });
+            }
+            try {
+                const result = await paymentFetch(id, WALLET_CONNECT_KEY, body);
+                return sendJson(res, 200, { result });
+            } catch (err) {
+                return sendJson(res, 400, { error: err.message || 'Payment processing failed' });
+            }
+        }
+        if (req.method === 'POST' && req.url === '/payment_confirm') {
+            const data = await parseJsonBody(req);
+            const id = data && data.id;
+            if (!id) {
+                return sendJson(res, 400, { error: 'Missing required field: id' });
+            }
+            const body = data && data.body;
+            if (!body) {
+                return sendJson(res, 400, { error: 'Missing required field: body' });
+            }
+            try {
+                const result = await paymentConfirm(id, WALLET_CONNECT_KEY, body);
                 return sendJson(res, 200, { result });
             } catch (err) {
                 return sendJson(res, 400, { error: err.message || 'Payment processing failed' });
