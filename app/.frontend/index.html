@@ -84,8 +84,12 @@
             <a-entity meta-touch-controls="hand: right; model: true;" controller-listener="hand: right;" six-dimension-tracker="tag: right">
                 <a-entity gltf-model="#quest-touch-plus-right" scale="1 1 1"></a-entity>
             </a-entity>
-            <a-entity laser-controls="hand: left" raycaster="lineColor: #ff00a0; lineOpacity: 0.9; showLine: true" id="rayCasterLeft"></a-entity>
-            <a-entity laser-controls="hand: right" raycaster="lineColor: #a000ff; lineOpacity: 0.9; showLine: true" id="rayCasterRight"></a-entity>
+            <a-entity laser-controls="hand: left"
+                      thick-raycaster="objects:.collidable; radius:0.12; far:20"
+                      id="rayCasterLeft"></a-entity>
+            <a-entity laser-controls="hand: right"
+                      thick-raycaster="objects:.collidable; radius:0.12; far:20"
+                      id="rayCasterRight"></a-entity>
             <!-- Info box entity -->
             <a-entity id="infoBox" position="0 1.2 -1.5" rotation="-30 0 0" class="clickable">
                 <a-box id="frame"
@@ -226,5 +230,6 @@
         </a-scene>
         <script src="main.js"></script>
         <script src="after.js"></script>
+        <script src="alien.js"></script>
     </body>
 </html>

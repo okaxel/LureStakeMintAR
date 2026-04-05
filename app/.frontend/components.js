@@ -306,6 +306,241 @@ AFRAME.registerComponent('six-dimension-tracker', {
     }
 });
 
+AFRAME.registerComponent('thick-raycaster', {
+  schema: {
+    objects: { type: 'string', default: '' }, // selector for targets, e.g. '.collidable'
+    radius: { type: 'number', default: 0.05 }, // beam radius in meters
+    far: { type: 'number', default: 10 },
+    interval: { type: 'number', default: 0 } // ms between checks; 0 = every frame
+  },
+
+  init: function () {
+    this._lastCheck = 0;
+    this._intersected = [];
+    this.rayOrigin = new THREE.Vector3();
+    this.rayDir = new THREE.Vector3(0, 0, -1);
+    this.ray = new THREE.Ray();
+    this.tmpVec = new THREE.Vector3();
+    this.targets = [];
+    this.updateTargets();
+  },
+
+  updateTargets: function () {
+    if (!this.data.objects) {
+      this.targets = [];
+      return;
+    }
+    this.targets = Array.from(document.querySelectorAll(this.data.objects))
+      .map(el => el.object3D).filter(o => o);
+  },
+
+  tick: function (time, dt) {
+    if (this.data.interval > 0) {
+      if (time - this._lastCheck < this.data.interval) return;
+      this._lastCheck = time;
+    }
+
+    this.el.object3D.getWorldPosition(this.rayOrigin);
+    this.tmpVec.set(0, 0, -1).applyQuaternion(this.el.object3D.getWorldQuaternion(new THREE.Quaternion()));
+    this.ray.set(this.rayOrigin, this.tmpVec);
+
+    const hits = [];
+    const far = this.data.far;
+    const beamR = this.data.radius;
+
+    for (let obj3D of this.targets) {
+      let mesh = obj3D;
+      // if group, try to find first mesh child
+      if (!mesh.geometry && mesh.children.length) {
+        mesh = mesh.children.find(c => c.geometry) || mesh;
+      }
+      if (!mesh.geometry) continue;
+      if (!mesh.geometry.boundingSphere) mesh.geometry.computeBoundingSphere();
+      const center = mesh.geometry.boundingSphere.center.clone().applyMatrix4(mesh.matrixWorld);
+      const objRadius = mesh.geometry.boundingSphere.radius * mesh.scale.x; // approximate
+      const distToRay = this.ray.distanceToPoint(center);
+      const v = center.clone().sub(this.rayOrigin);
+      const proj = v.dot(this.ray.direction);
+      if (proj < 0 || proj > far) continue; // out of range
+      if (distToRay <= (beamR + objRadius)) {
+        hits.push({
+          distance: proj,
+          point: this.ray.at(proj, new THREE.Vector3()).clone(),
+          object: obj3D.el || obj3D // keep reference to element if available
+        });
+      }
+    }
+
+    hits.sort((a, b) => a.distance - b.distance);
+    if (hits.length) {
+      this.el.emit('raycaster-intersection', { intersections: hits }, false);
+      this._intersected = hits;
+    } else if (this._intersected.length) {
+      this.el.emit('raycaster-intersection-cleared', {});
+      this._intersected = [];
+    }
+  },
+
+  update: function (oldData) {
+    if (oldData.objects !== this.data.objects) this.updateTargets();
+  }
+
+});
+
+
+AFRAME.registerComponent('random-fly', {
+    schema: {
+    width: { type: 'number', default: 6 },          // X span (meters)
+    depth: { type: 'number', default: 6 },          // Z span (meters)
+    height: { type: 'number', default: 3 },         // Y span (meters)
+    baseSpeed: { type: 'number', default: 1.2 },    // baseline horizontal speed (m/s)
+    accel: { type: 'number', default: 3.0 },        // acceleration toward target (m/s^2)
+    gravity: { type: 'number', default: 2.5 },      // gravity-like downward accel (m/s^2)
+    ascendSlow: { type: 'number', default: 0.5 },   // fraction to slow when ascending (0..1)
+    descendBoost: { type: 'number', default: 0.3 }, // extra speed fraction when descending
+    changeInterval: { type: 'number', default: 2000 } // ms between picking new targets
+    },
+    init: function () {
+    // Bounds centered on origin; flyer will orbit within these extents around scene origin
+    this.halfW = this.data.width / 2;
+    this.halfD = this.data.depth / 2;
+    this.maxY = this.data.height;
+    this.minY = 0;
+
+    // State
+    this.velocity = new THREE.Vector3(); // current velocity in world space
+    this.target = new THREE.Vector3();   // current target position in world space
+    this.tempVec = new THREE.Vector3();
+    this.lastChange = 0;
+    this.el.object3D.getWorldPosition(this.tempVec);
+    // Initialize position if not set
+    if (!this.el.getAttribute('position')) {
+        this.el.setAttribute('position', `${0} ${1.2} ${0}`);
+    }
+    // Pick initial random target
+    this._pickNewTarget();
+
+    // Small random initial velocity
+    this.velocity.set((Math.random()-0.5)*0.4, (Math.random()-0.5)*0.2, (Math.random()-0.5)*0.4);
+    },
+    _pickNewTarget: function () {
+    // Choose a random point inside the box bounds relative to world origin
+    const x = (Math.random() * this.data.width) - this.halfW;
+    const z = (Math.random() * this.data.depth) - this.halfD;
+    const y = this.minY + Math.random() * (this.maxY - this.minY);
+    this.target.set(x, y, z);
+    this.lastChange = performance.now();
+    },
+    tick: function (time, delta) {
+    const dt = Math.min(delta, 50) / 1000; // seconds, clamp dt for stability
+    if (dt <= 0) return;
+
+    // Occasionally pick a new target if close or interval passed
+    const worldPos = new THREE.Vector3();
+    this.el.object3D.getWorldPosition(worldPos);
+    const toTarget = this.target.clone().sub(worldPos);
+    const distToTarget = toTarget.length();
+    if (distToTarget < 0.35 || (performance.now() - this.lastChange) > this.data.changeInterval) {
+        this._pickNewTarget();
+    }
+
+    // Compute desired acceleration toward target (simple steering)
+    const desiredDir = this.target.clone().sub(worldPos).normalize();
+    const accelVec = desiredDir.multiplyScalar(this.data.accel);
+
+    // Gravity-like downward acceleration
+    const gravityVec = new THREE.Vector3(0, -this.data.gravity, 0);
+
+    // Combine accelerations
+    const totalAccel = accelVec.add(gravityVec);
+
+    // Update velocity: v = v + a * dt
+    this.velocity.addScaledVector(totalAccel, dt);
+
+    // Apply speed modulation based on vertical motion to mimic gravity effect:
+    // When ascending (vy > 0) reduce horizontal speed; when descending (vy < 0) boost it.
+    const vy = this.velocity.y;
+    // Compute horizontal speed factor
+    let horizFactor = 1.0;
+    if (vy > 0.001) {
+        // ascending: slow down proportionally to ascendSlow
+        horizFactor = 1.0 - this.data.ascendSlow * Math.min(1, vy / 2.0);
+    } else if (vy < -0.001) {
+        // descending: speed up proportionally to descendBoost
+        horizFactor = 1.0 + this.data.descendBoost * Math.min(1, -vy / 2.0);
+    }
+    // Apply horizontal factor to x and z components of velocity
+    this.velocity.x *= horizFactor;
+    this.velocity.z *= horizFactor;
+
+    // Limit overall horizontal speed to a reasonable cap based on baseSpeed
+    const horizSpeed = Math.sqrt(this.velocity.x * this.velocity.x + this.velocity.z * this.velocity.z);
+    const maxHoriz = Math.max(0.2, this.data.baseSpeed * 1.8);
+    if (horizSpeed > maxHoriz) {
+        const scale = maxHoriz / horizSpeed;
+        this.velocity.x *= scale;
+        this.velocity.z *= scale;
+    }
+
+    // Integrate position: p = p + v * dt
+    const newPos = worldPos.clone().addScaledVector(this.velocity, dt);
+
+    // Boundary handling: keep inside the box; bounce with damping
+    // X bounds
+    if (newPos.x < -this.halfW) {
+        newPos.x = -this.halfW;
+        this.velocity.x *= -0.6;
+    } else if (newPos.x > this.halfW) {
+        newPos.x = this.halfW;
+        this.velocity.x *= -0.6;
+    }
+    // Z bounds
+    if (newPos.z < -this.halfD) {
+        newPos.z = -this.halfD;
+        this.velocity.z *= -0.6;
+    } else if (newPos.z > this.halfD) {
+        newPos.z = this.halfD;
+        this.velocity.z *= -0.6;
+    }
+    // Y bounds
+    if (newPos.y < this.minY) {
+        newPos.y = this.minY;
+        this.velocity.y *= -0.45; // bounce and lose energy
+        // small random upward kick so it doesn't stick to floor
+        this.velocity.y += 0.6 + Math.random() * 0.6;
+    } else if (newPos.y > this.maxY) {
+        newPos.y = this.maxY;
+        this.velocity.y *= -0.5;
+    }
+
+    // Apply a small damping to velocity to avoid runaway
+    this.velocity.multiplyScalar(0.995);
+
+    // Set world position; convert to local if parent exists
+    const finalPos = newPos;
+    if (this.el.parentEl && this.el.parentEl.object3D) {
+        this.el.parentEl.object3D.worldToLocal(finalPos);
+    }
+    this.el.setAttribute('position', `${finalPos.x} ${finalPos.y} ${finalPos.z}`);
+
+    // Optional: make the entity face its velocity direction for visual feedback
+    const velDir = this.velocity.clone();
+    if (velDir.lengthSq() > 0.0001) {
+        // compute lookAt target slightly ahead along velocity
+        const lookTarget = newPos.clone().add(velDir.clone().normalize().multiplyScalar(0.5));
+        if (this.el.parentEl && this.el.parentEl.object3D) {
+        this.el.parentEl.object3D.worldToLocal(lookTarget);
+        }
+        this.el.object3D.lookAt(lookTarget);
+        // Add a small tilt based on vertical velocity for liveliness
+        const currentRot = this.el.getAttribute('rotation') || { x: 0, y: 0, z: 0 };
+        const roll = THREE.MathUtils.clamp(-this.velocity.y * 6, -12, 12);
+        this.el.setAttribute('rotation', `${currentRot.x} ${currentRot.y} ${roll}`);
+    }
+    }
+});
+
+
 /*
 triggerchanged 	Trigger changed.
 thumbstickchanged 	Thumbstick changed.

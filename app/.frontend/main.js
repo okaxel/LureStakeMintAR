@@ -82,18 +82,6 @@ class UserState {
 
 }
 
-class Alien {
-
-    constructor (position, radius, color) {
-
-        this.position = position;
-        this.radius = radius;
-        this.color = color;
-
-    }
-
-}
-
 function createRandomAlien() {
 
   const x = -1 + (Math.random() * 4 - 2);
@@ -271,25 +259,32 @@ function moveAFrameElementTo(el, targetPos, opts = {}) {
   });
 }
 
+function randomAlien() {
 
-function newAlien(position, radius, color) {
-
-    const alien = document.createElement('a-sphere');
-    alien.setAttribute('id', randomId());
-    alien.setAttribute('position', position);
-    alien.setAttribute('radius', radius);
-    alien.setAttribute('color', color);
-    alien.setAttribute('shadow', 'cast: true; receive: true');
-    alien.setAttribute('hover-color-change', '');
-    AppState.scene.appendChild(alien);
-    AppState.aliens.push(alien);
-    return alien;
+  const alien = new Alien(randomAlienType());
+  const nextTime = randomFloat(4000, 8000);
+  setTimeout(randomAlien, nextTime);
+  alien.randomFly();
 
 }
 
-function randomId() {
-    return Math.random().toString(36).slice(2);
+function randomAlienType() {
+
+  const arr = ['Mintling', 'Gasoid', 'Contracteur', 'Droppee', 'Vivido', 'Hidee', 'Gamblet', 'Omno'];
+  const idx = Math.floor(Math.random() * arr.length);
+  return arr[idx];
+
 }
 
+
+function startDemo() {
+
+  for (let i=0; i < 10; i++) {
+    let a = new Alien('Mintling');
+    a.randomFly();
+  }
+   
+
+}
 
 window.addEventListener('DOMContentLoaded', initPage);

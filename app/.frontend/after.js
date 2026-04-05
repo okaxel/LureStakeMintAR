@@ -62,6 +62,7 @@ AFRAME.registerComponent('dismiss-on-click', {
                 element.setAttribute('visible', 'false');
             };
         }
+        startDemo();
     });
     }
 });
