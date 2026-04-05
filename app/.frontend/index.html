@@ -69,6 +69,11 @@
             <a-assets>
                 <a-asset-item id="quest-touch-plus-left" src="/assets/quest-touch-plus-left.glb"></a-asset-item>
                 <a-asset-item id="quest-touch-plus-right" src="/assets/quest-touch-plus-right.glb"></a-asset-item>
+                <img id="logo_ens" src="assets/ens.png" crossorigin="anonymous" />
+                <img id="logo_eth_cannes" src="assets/eth_cannes.jpg" crossorigin="anonymous" />
+                <img id="logo_eth_global" src="assets/eth_global.png" crossorigin="anonymous" />
+                <img id="logo_walletconnect" src="assets/walletconect.jpg" crossorigin="anonymous" />
+                <img id="logo_world" src="assets/world.png" crossorigin="anonymous" />
             </a-assets>
             <a-entity id="userHead">
                 <a-camera id="camera" position="0 1.78 0" six-dimension-tracker="tag: head"></a-camera>
@@ -81,6 +86,126 @@
             </a-entity>
             <a-entity laser-controls="hand: left" raycaster="lineColor: #ff00a0; lineOpacity: 0.9; showLine: true" id="rayCasterLeft"></a-entity>
             <a-entity laser-controls="hand: right" raycaster="lineColor: #a000ff; lineOpacity: 0.9; showLine: true" id="rayCasterRight"></a-entity>
+            <!-- Info box entity -->
+            <a-entity id="infoBox" position="0 1.2 -1.5" rotation="-30 0 0" class="clickable">
+                <a-box id="frame"
+                    width="1.6" height="1.0" depth="0.12"
+                    position="0 0 0"
+                    material="color: #ADFF2F; metalness: 0.2; roughness: 0.6">
+                </a-box>
+                <a-plane id="frontCanvas"
+                        width="1.36" height="0.56"
+                        position="0 0.1 0.07"
+                        rotation="0 0 0"
+                        material="shader: flat; src: #infoCanvasTexture">
+                </a-plane>
+                <a-entity id="okButton" position="0 -0.38 0.09">
+                <a-box id="okBox"
+                        width="0.3" height="0.12" depth="0.02"
+                        class="clickable"
+                        material="color: #000000; shader: flat">
+                </a-box>
+                <a-text value="OK"
+                        align="center"
+                        color="#Start"
+                        position="0 0 0.03"
+                        width="0.8"
+                        baseline="center">
+                </a-text>
+                </a-entity>
+            </a-entity>
+            <canvas id="infoCanvas" width="1024" height="576" style="display:none"></canvas>
+            <a-assets>
+                <img id="infoCanvasTexture" src="" crossorigin="anonymous" />
+            </a-assets>
+            <!-- END Info box entity -->
+            <!-- Partner Boxes -->
+            <!-- Holder group that contains frame and cube -->
+            <a-entity id="p_cannes" position="3 2 -2" rotation="0 0 0">
+                <a-entity id="frame" animation="property: rotation; to: 0 6 0; dir: alternate; dur: 1600; loop: true; easing: easeInOutSine">
+                    <a-box position="0 0.45 0" width="1.6" height="0.08" depth="0.08" color="#ADFF2F"></a-box>
+                    <a-box position="0 -0.45 0" width="1.6" height="0.08" depth="0.08" color="#ADFF2F"></a-box>
+                    <a-box position="-0.78 0 0" width="0.08" height="1.0" depth="0.08" color="#ADFF2F"></a-box>
+                    <a-box position="0.78 0 0" width="0.08" height="1.0" depth="0.08" color="#ADFF2F"></a-box>
+                </a-entity>
+                <a-box id="rotatingCube"
+                    class="clickable"
+                    position="0 0 0"
+                    width="0.7" height="0.7" depth="0.7"
+                    material="src: #logo_eth_cannes; repeat: 1 1; color: #ffffff"
+                    animation="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear">
+                </a-box>
+            </a-entity>
+            <a-entity id="p_eth" position="0 4 -3" rotation="0 0 0">
+                <a-entity id="frame" animation="property: rotation; to: 0 6 0; dir: alternate; dur: 1600; loop: true; easing: easeInOutSine">
+                    <a-box position="0 0.45 0" width="1.6" height="0.08" depth="0.08" color="#ADFF2F"></a-box>
+                    <a-box position="0 -0.45 0" width="1.6" height="0.08" depth="0.08" color="#ADFF2F"></a-box>
+                    <a-box position="-0.78 0 0" width="0.08" height="1.0" depth="0.08" color="#ADFF2F"></a-box>
+                    <a-box position="0.78 0 0" width="0.08" height="1.0" depth="0.08" color="#ADFF2F"></a-box>
+                </a-entity>
+                <a-box id="rotatingCube"
+                    class="clickable"
+                    position="0 0 0"
+                    width="0.7" height="0.7" depth="0.7"
+                    material="src: #logo_eth_global; repeat: 1 1; color: #ffffff"
+                    animation="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear">
+                </a-box>
+            </a-entity>
+            <a-entity id="p_ens" position="0 3 -4" rotation="0 0 0">
+                <a-entity id="frame" animation="property: rotation; to: 0 6 0; dir: alternate; dur: 1600; loop: true; easing: easeInOutSine">
+                    <a-box position="0 0.45 0" width="1.6" height="0.08" depth="0.08" color="#ADFF2F"></a-box>
+                    <a-box position="0 -0.45 0" width="1.6" height="0.08" depth="0.08" color="#ADFF2F"></a-box>
+                    <a-box position="-0.78 0 0" width="0.08" height="1.0" depth="0.08" color="#ADFF2F"></a-box>
+                    <a-box position="0.78 0 0" width="0.08" height="1.0" depth="0.08" color="#ADFF2F"></a-box>
+                </a-entity>
+                <a-box id="rotatingCube"
+                    class="clickable"
+                    position="0 0 0"
+                    width="0.7" height="0.7" depth="0.7"
+                    material="src: #logo_ens; repeat: 1 1; color: #ffffff"
+                    animation="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear">
+                </a-box>
+            </a-entity>
+            <a-entity id="p_world" position="-2 3 -3" rotation="0 0 0">
+                <a-entity id="frame" animation="property: rotation; to: 0 6 0; dir: alternate; dur: 1600; loop: true; easing: easeInOutSine">
+                    <a-box position="0 0.45 0" width="1.6" height="0.08" depth="0.08" color="#ADFF2F"></a-box>
+                    <a-box position="0 -0.45 0" width="1.6" height="0.08" depth="0.08" color="#ADFF2F"></a-box>
+                    <a-box position="-0.78 0 0" width="0.08" height="1.0" depth="0.08" color="#ADFF2F"></a-box>
+                    <a-box position="0.78 0 0" width="0.08" height="1.0" depth="0.08" color="#ADFF2F"></a-box>
+                </a-entity>
+                <a-box id="rotatingCube"
+                    class="clickable"
+                    position="0 0 0"
+                    width="0.7" height="0.7" depth="0.7"
+                    material="src: #logo_world; repeat: 1 1; color: #ffffff"
+                    animation="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear">
+                </a-box>
+            </a-entity>
+            <a-entity id="p_walletconnect" position="2 3 -3" rotation="0 0 0">
+                <a-entity id="frame" animation="property: rotation; to: 0 6 0; dir: alternate; dur: 1600; loop: true; easing: easeInOutSine">
+                    <a-box position="0 0.45 0" width="1.6" height="0.08" depth="0.08" color="#ADFF2F"></a-box>
+                    <a-box position="0 -0.45 0" width="1.6" height="0.08" depth="0.08" color="#ADFF2F"></a-box>
+                    <a-box position="-0.78 0 0" width="0.08" height="1.0" depth="0.08" color="#ADFF2F"></a-box>
+                    <a-box position="0.78 0 0" width="0.08" height="1.0" depth="0.08" color="#ADFF2F"></a-box>
+                </a-entity>
+                <a-box id="rotatingCube"
+                    class="clickable"
+                    position="0 0 0"
+                    width="0.7" height="0.7" depth="0.7"
+                    material="src: #logo_walletconnect; repeat: 1 1; color: #ffffff"
+                    animation="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear">
+                </a-box>
+            </a-entity>
+
+            <!-- END Partner Boxes -->
+
+
+
+
+
+
+
+            <!--
             <a-box position="1.5 1.78 -1.5" rotation="0 0 0"
                    material="color: #ADFF2F; shader: standard; metalness: 0; roughness: 1; emissive: #ADFF2F; emissiveIntensity: 1" hover-color-change>
                 <a-animation attribute="material.emissiveIntensity" from="0.6"
@@ -97,8 +222,9 @@
                         value: 1 \n 2 \n 3 \n 4"
                 vr-log>
             </a-entity>
-
+-->
         </a-scene>
         <script src="main.js"></script>
+        <script src="after.js"></script>
     </body>
 </html>
